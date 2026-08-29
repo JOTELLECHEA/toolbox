@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>toolbox</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #211f1c;
+    --surface: #2b2824;
+    --surface-hover: #332f29;
+    --strip: #17140f;
+    --border: #46403f;
+    --text: #ede7dd;
+    --text-muted: #948c7c;
+    --accent: #c9a227;
+    --accent-soft: rgba(201, 162, 39, 0.14);
+    --confirm: #7fa07a;
+    --font-display: "Big Shoulders Stencil", "Arial Narrow", sans-serif;
+    --font-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+    --font-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 56px 24px 96px;
+  }
+
+  /* ---------- header ---------- */
+
+  header {
+    margin-bottom: 32px;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(40px, 8vw, 64px);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    margin: 0 0 4px;
+    color: var(--text);
+  }
+
+  .tagline {
+    color: var(--text-muted);
+    font-size: 15px;
+    margin: 0 0 20px;
+  }
+
+  .stat-line {
+    font-family: var(--font-display);
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  /* ---------- search ---------- */
+
+  .search-row {
+    position: relative;
+    margin: 28px 0 40px;
+  }
+
+  #search {
+    width: 100%;
+    background: var(--strip);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 16px;
+    padding: 16px 52px 16px 18px;
+    border-radius: 3px;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  #search::placeholder { color: var(--text-muted); }
+
+  #search:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  .keycap {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    padding: 2px 7px;
+    pointer-events: none;
+  }
+
+  /* ---------- sections ---------- */
+
+  .eyebrow {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 34px 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .eyebrow .sub {
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: 12px;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--text-muted);
+  }
+
+  #results > .eyebrow:first-child { margin-top: 0; }
+
+  /* ---------- entry card (the signature element: a die-cut bin tag) ---------- */
+
+  .entry {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    clip-path: polygon(0 14px, 14px 0, 100% 0, 100% 100%, 0 100%);
+    margin-bottom: 10px;
+    padding: 14px 16px 14px 20px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px 16px;
+    align-items: center;
+  }
+
+  .entry:hover { background: var(--surface-hover); }
+
+  .entry-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    grid-column: 1 / -1;
+  }
+
+  .entry-pill {
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 2px 7px;
+    border-radius: 2px;
+    margin-left: 8px;
+  }
+
+  .entry-cmd {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    background: var(--strip);
+    border-radius: 2px;
+    padding: 10px 12px;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .copy-btn {
+    font-family: var(--font-display);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text);
+    background: var(--surface-hover);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 10px 14px;
+    cursor: pointer;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 1px 2px rgba(0, 0, 0, 0.35);
+    transition: transform 0.08s ease, background 0.15s ease, color 0.15s ease;
+    white-space: nowrap;
+  }
+
+  .copy-btn:hover { border-color: var(--accent); }
+  .copy-btn:active { transform: translateY(1px); box-shadow: none; }
+
+  .copy-btn.copied {
+    background: var(--confirm);
+    color: #17240f;
+    border-color: var(--confirm);
+  }
+
+  .copy-btn:focus-visible,
+  #search:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* ---------- empty state ---------- */
+
+  .empty {
+    color: var(--text-muted);
+    font-size: 14px;
+    padding: 24px 0;
+    border-top: 1px solid var(--border);
+    margin-top: 24px;
+  }
+
+  .empty strong { color: var(--text); font-weight: 500; }
+
+  .hint {
+    color: var(--text-muted);
+    font-size: 14px;
+    padding: 4px 0 24px;
+  }
+
+  #search:disabled { opacity: 0.5; cursor: wait; }
+
+  @media (max-width: 560px) {
+    .entry { grid-template-columns: 1fr; }
+    .copy-btn { width: 100%; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Toolbox</h1>
+      <p class="tagline">search once. copy the exact command.</p>
+      <div class="stat-line" id="stat-line">loading&hellip;</div>
+    </header>
+
+    <div class="search-row">
+      <input id="search" type="text" autocomplete="off" spellcheck="false" disabled
+             placeholder="search commands, or describe what you need &mdash; e.g. &lsquo;setup a python env&rsquo;">
+      <span class="keycap">/</span>
+    </div>
+
+    <main id="results"></main>
+  </div>
+
+<script>
+(function () {
+  const searchEl = document.getElementById("search");
+  const resultsEl = document.getElementById("results");
+  const statEl = document.getElementById("stat-line");
+
+  let topics = [];   // [{topic, file, entries: [{cmd, desc, tags, section}]}]
+  let flat = [];      // flattened for search: adds topic/file onto each entry
+
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+    }[c]));
+  }
+
+  function entryCard(e, showTopicPill) {
+    const pill = showTopicPill ? `<span class="entry-pill">${escapeHtml(e.topic)}</span>` : "";
+    return `
+      <div class="entry">
+        <div class="entry-desc">${escapeHtml(e.desc)}${pill}</div>
+        <div class="entry-cmd">${escapeHtml(e.cmd)}</div>
+        <button class="copy-btn" data-cmd="${escapeHtml(e.cmd)}">Copy</button>
+      </div>`;
+  }
+
+  function renderIdle() {
+    if (topics.length === 0) {
+      resultsEl.innerHTML = `<div class="empty">No sheets found yet. Add a <strong>.md</strong> file under your toolbox root and refresh.</div>`;
+      return;
+    }
+    resultsEl.innerHTML = `<div class="hint">Start typing to search ${flat.length} command${flat.length === 1 ? "" : "s"}.</div>`;
+  }
+
+  // Same lenient OR-scored matching as the `tb` CLI: an entry scores by how
+  // many query words appear anywhere across its description, tags, topic
+  // name, and the command itself — so a partial phrase still surfaces the
+  // best available match instead of returning nothing.
+  function search(query) {
+    const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+    if (words.length === 0) { renderIdle(); return; }
+
+    const scored = flat.map((e) => {
+      const haystack = `${e.desc} ${e.tags} ${e.topic} ${e.cmd}`.toLowerCase();
+      const score = words.reduce((n, w) => n + (haystack.includes(w) ? 1 : 0), 0);
+      return { e, score };
+    }).filter((r) => r.score > 0);
+
+    scored.sort((a, b) => b.score - a.score);
+
+    if (scored.length === 0) {
+      resultsEl.innerHTML = `<div class="empty">No match in the toolbox for &ldquo;<strong>${escapeHtml(query)}</strong>&rdquo;. Try fewer or different words.</div>`;
+      return;
+    }
+
+    resultsEl.innerHTML = `
+      <div class="eyebrow">Results <span class="sub">${scored.length} match${scored.length === 1 ? "" : "es"}</span></div>
+      ${scored.map((r) => entryCard(r.e, true)).join("")}`;
+  }
+
+  resultsEl.addEventListener("click", async (ev) => {
+    const btn = ev.target.closest(".copy-btn");
+    if (!btn) return;
+    try {
+      await navigator.clipboard.writeText(btn.dataset.cmd);
+      btn.textContent = "Copied";
+      btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1200);
+    } catch (err) {
+      btn.textContent = "Select + ⌘C";
+      setTimeout(() => { btn.textContent = "Copy"; }, 1500);
+    }
+  });
+
+  searchEl.addEventListener("input", (ev) => search(ev.target.value));
+
+  document.addEventListener("keydown", (ev) => {
+    if (ev.key === "/" && document.activeElement !== searchEl) {
+      ev.preventDefault();
+      searchEl.focus();
+    }
+    if (ev.key === "Escape" && document.activeElement === searchEl) {
+      searchEl.blur();
+    }
+  });
+
+  fetch("/api/entries")
+    .then((r) => r.json())
+    .then((data) => {
+      topics = data;
+      flat = topics.flatMap((t) => t.entries.map((e) => ({ ...e, topic: t.topic, file: t.file })));
+      const fileCount = topics.length;
+      statEl.textContent = `${flat.length} command${flat.length === 1 ? "" : "s"} across ${fileCount} file${fileCount === 1 ? "" : "s"}`;
+      renderIdle();
+      searchEl.disabled = false;
+      searchEl.focus();
+    })
+    .catch(() => {
+      statEl.textContent = "couldn't reach the server";
+      resultsEl.innerHTML = `<div class="empty">Couldn&rsquo;t load <strong>/api/entries</strong>. Is <strong>server.py</strong> still running?</div>`;
+    });
+})();
+</script>
+</body>
+</html>
