@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-tb-web — serves your toolbox as a searchable page on localhost.
+app — serves your toolbox as a searchable page on localhost.
 
-Defaults to the repo tb-web/ sits inside — so as long as it stays as a
+Defaults to the repo app/ sits inside — so as long as it stays as a
 subfolder of your toolbox clone, this works with zero setup on any machine:
 
-    python3 server.py                          # from inside tb-web/
-    python3 tb-web/server.py                    # from the repo root
+    python3 server.py                          # from inside app/
+    python3 app/server.py                      # from the repo root
     TOOLBOX_ROOT=~/somewhere/else python3 server.py   # override if needed
     TOOLBOX_PORT=9000 python3 server.py
     python3 server.py --lint                    # check for entries that fail to parse
@@ -22,6 +22,9 @@ Two entry formats live side by side:
     ```python
     boilerplate code here
     ```
+
+Fully offline — the syntax highlighter and all fonts are self-hosted
+alongside this file (highlight.min.js, latex.min.js, fonts/), no CDN calls.
 """
 import argparse
 import http.server
@@ -32,7 +35,7 @@ import socketserver
 from pathlib import Path
 
 STATIC_DIR = Path(__file__).resolve().parent
-DEFAULT_ROOT = STATIC_DIR.parent  # tb-web/ is expected to live inside the toolbox repo
+DEFAULT_ROOT = STATIC_DIR.parent  # app/ is expected to live inside the toolbox repo
 ROOT = Path(os.environ.get("TOOLBOX_ROOT", DEFAULT_ROOT)).expanduser()
 PORT = int(os.environ.get("TOOLBOX_PORT", 8420))
 
@@ -52,7 +55,7 @@ HEADER_RE = re.compile(r"^(#{2,6})\s+(.*)$")
 def sheets():
     if not ROOT.exists():
         return []
-    # Skip tb-web/'s own files (e.g. its README's format example) when it's
+    # Skip app/'s own files (e.g. its README's format example) when it's
     # sitting inside the scanned root, so the tool never treats its own
     # documentation as a cheatsheet entry.
     return sorted(
