@@ -1,7 +1,38 @@
 # toolbox
 
 A personal reference of terminal commands and code snippets — the ones used
-often enough to need, but not often enough to remember.
+often enough to need, but not often enough to remember. Searchable through a
+small local web app, fully offline.
+
+This is my own setup, not a generic template — the `.md` files are my
+commands. The tool itself doesn't assume anything about what's in them
+though, so if you want something like this, fork it and swap in your own
+content.
+
+## Getting started
+
+    git clone https://github.com/JOTELLECHEA/toolbox.git
+    cd toolbox
+    python3 app/server.py
+
+Then open `http://localhost:8420`.
+
+Python 3 is the only requirement — no pip installs, no build step, nothing
+to configure. `server.py` locates the repo from its own path, so it works
+from anywhere:
+
+    alias toolbox="python3 /path/to/toolbox/app/server.py"
+
+Swap `/path/to/toolbox` for wherever you cloned it (same goes for the Docker
+examples below). Then `toolbox` from any directory starts it.
+
+Search matches against each entry's description, tags, topic name, and its
+content — a command's text or a snippet's actual code. It scores by how many
+of your words appear rather than requiring an exact phrase, so "setup python
+env" still finds something described as "set **up** a new virtual
+environment." Exact whole-word matches rank above coincidental substrings,
+so searching "roc" finds an ROC-curve snippet rather than anything
+containing "p**roc**ess."
 
 ## Structure
 
@@ -19,9 +50,12 @@ pattern:
   `tar.md` and `zip.md`.
 
 New topic = new file, in an existing shared folder if it fits one, or its
-own folder if it's a standalone tool. Nothing else to register — `app`
-(below) finds every sheet under the repo automatically, however deep it's
-nested.
+own folder if it's a standalone tool. Nothing else to register — the app
+finds every sheet under the repo automatically, however deep it's nested.
+
+Some folders are empty placeholders for topics not yet written up. Git
+doesn't track empty directories, so those won't appear in a fresh clone
+until something's added.
 
 ## Entry format
 
@@ -32,9 +66,8 @@ Two formats live side by side in the same files.
     - `command here` — description here <!-- optional, extra, search terms -->
 
 - The description is optional — a bare `` - `cmd` `` still parses and shows
-  up in search (matched against the command text itself) — but it's worth
-  adding anyway. It's what makes a phrase search like "setup a python env"
-  actually work, and what shows up in the `app` topic view.
+  up in search, matched against the command text itself — but it's worth
+  adding anyway, since it's what makes a phrase search work.
 - **One command per bullet.** `` - `cmd1` / `cmd2` `` reads fine on GitHub
   but silently fails to parse as an entry — split it into two lines.
 - `<!-- tags -->` are invisible on GitHub but searchable — use them for
@@ -53,61 +86,44 @@ before a fenced code block:
 An H3 with nothing fenced right after it just becomes a normal section
 label — nothing's forced into being a snippet.
 
-Run `python3 app/server.py --lint` after adding entries. It reports any
-command line that looks like an entry but doesn't parse, so a typo doesn't
-just silently vanish from search — which is exactly how `git clone` went
-missing for a while.
+Snippets are syntax-highlighted. Python, bash, C++, and ~30 other common
+languages work out of the box; LaTeX is bundled separately in `app/`.
 
-## Searching it — app
+### Checking your entries
 
-`app/` is a small local web app: search bar, live results, copy buttons,
-syntax-highlighted snippets. No build step — it re-reads the `.md` files on
-every search, so an edit shows up on refresh. Fully offline: the syntax
-highlighter and all fonts are self-hosted inside `app/`, no CDN calls.
+    python3 app/server.py --lint
 
-    alias tb="python3 ~/Projects/toolbox/app/server.py"
-
-Then `tb` from anywhere starts it at `http://localhost:8420`. It can also
-run in Docker instead — see "Running it in Docker" below.
-
-Search scores every entry by how many of the typed words show up anywhere
-across its description, tags, topic name, and its content (a command's
-text, or a snippet's actual code) — not an exact-phrase match, and an exact
-whole-word match now outranks a word that's merely a coincidental substring
-inside something unrelated. That's why "setup python env" still finds
-something described as "set **up** a new virtual environment," and why
-searching "roc" correctly finds an ROC-curve snippet instead of a `bash`
-entry that only matched because "roc" happens to sit inside "p**roc**ess."
+Reports any line that looks like an entry but doesn't parse. Worth running
+after adding content, since a malformed entry doesn't raise an error — it
+just silently never appears in search. Prose bullets that happen to start
+with a backtick will show up here too; those are expected, not problems.
 
 ## Running it in Docker
 
-An alternative to the alias above — useful on a machine that doesn't
-already have Python set up the way you like it, or if you'd rather not
-think about that at all. For day-to-day use on your own machine, the `tb`
-alias still starts faster, since there's no container to spin up.
+An alternative to running it directly — useful on a machine that doesn't
+already have Python set up the way you like it. For day-to-day use the
+plain `toolbox` alias starts faster, since there's no container to spin up.
 
 `app/Dockerfile` bakes in the static app itself — `server.py`, `index.html`,
-the syntax highlighter, the fonts. Those rarely change, so rebuilding the
-image on the rare occasion they do is fine. Your actual content never goes
-into the image: the root `docker-compose.yml` mounts the whole repo in
-live, read-only, so editing a `.md` file and refreshing the page works
-exactly like running it directly — the container never has its own stale
-copy of your cheatsheets.
+the syntax highlighter, the fonts. Those rarely change, so rebuilding on the
+occasions they do is fine. Your content never goes into the image: the root
+`docker-compose.yml` mounts the repo in live and read-only, so editing a
+`.md` file and refreshing the page works exactly like running it directly —
+the container never holds a stale copy of your cheatsheets.
 
-Setup is just building the image once:
+Build the image once:
 
-    cd ~/Projects/toolbox
+    cd /path/to/toolbox
     docker compose build
 
-Then, to start and stop it:
+Then start and stop it:
 
     docker compose up -d      # starts it in the background
     docker compose down       # stops it
 
 Same address either way: `http://localhost:8420`.
 
-## Status
+To run those from anywhere without `cd`-ing in first:
 
-`latex/` is still a placeholder — empty until there's enough in it to be
-worth a file. (Git doesn't track empty directories, so a fresh clone won't
-show it until something's added.)
+    alias toolbox="docker compose -f /path/to/toolbox/toolbox/docker-compose.yml up -d"
+    alias toolbox-down="docker compose -f /path/to/toolbox/docker-compose.yml down"
