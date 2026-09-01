@@ -9,6 +9,7 @@ subfolder of your toolbox clone, this works with zero setup on any machine:
     python3 app/server.py                      # from the repo root
     TOOLBOX_ROOT=~/somewhere/else python3 server.py   # override if needed
     TOOLBOX_PORT=9000 python3 server.py
+    TOOLBOX_HOST=0.0.0.0 python3 server.py     # bind wider (e.g. inside Docker)
     python3 server.py --lint                    # check for entries that fail to parse
 
 Re-parses your .md files on every request to /api/entries, so editing a
@@ -38,6 +39,12 @@ STATIC_DIR = Path(__file__).resolve().parent
 DEFAULT_ROOT = STATIC_DIR.parent  # app/ is expected to live inside the toolbox repo
 ROOT = Path(os.environ.get("TOOLBOX_ROOT", DEFAULT_ROOT)).expanduser()
 PORT = int(os.environ.get("TOOLBOX_PORT", 8420))
+# Defaults to loopback-only, since this is a personal local tool with no
+# auth — binding wider would expose it to anyone else on the network.
+# Docker needs 0.0.0.0 here (its port mapping forwards from a different
+# network namespace, which 127.0.0.1 can't be reached from) — set via
+# TOOLBOX_HOST in the Dockerfile, not by changing this default.
+HOST = os.environ.get("TOOLBOX_HOST", "127.0.0.1")
 
 ENTRY_RE = re.compile(
     r"^- `(?P<cmd>[^`]+)`"
@@ -178,8 +185,8 @@ def main():
         lint()
         return
 
-    with socketserver.TCPServer(("127.0.0.1", PORT), Handler) as httpd:
-        print(f"toolbox running at http://localhost:{PORT}  (root: {ROOT})")
+    with socketserver.TCPServer((HOST, PORT), Handler) as httpd:
+        print(f"toolbox running at http://localhost:{PORT}  (root: {ROOT}, bind: {HOST})")
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:
