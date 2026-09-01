@@ -351,11 +351,23 @@
     resultsEl.innerHTML = "";
   }
 
-  // Same lenient OR-scored matching as the `tb` CLI: an entry scores by how
-  // many query words appear anywhere across its description, tags, topic
-  // name, and its content (the command, or a snippet's code) — so a partial
-  // phrase still surfaces the best available match instead of nothing, and
-  // a snippet is findable by what its code actually does, not just its title.
+  // A query word scores higher when it matches as a whole word (bounded by
+  // spaces, hyphens, or the start/end of the haystack) than when it's merely
+  // a substring buried inside a longer, unrelated word — e.g. "roc" used to
+  // tie with any entry mentioning "process" (p-roc-ess), and only won or
+  // lost that tie by arbitrary file order. Substring matches still count
+  // for something, just at half the weight, so prefix/plural cases (e.g.
+  // "env" finding "environment") keep working — they just no longer
+  // outrank a genuine exact word hit.
+  function escapeRegExp(s) {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+  function wordScore(haystack, word) {
+    if (!haystack.includes(word)) return 0;
+    const wholeWordRe = new RegExp(`\\b${escapeRegExp(word)}\\b`);
+    return wholeWordRe.test(haystack) ? 2 : 1;
+  }
+
   function search(query) {
     const words = query.toLowerCase().split(/\s+/).filter(Boolean);
     if (words.length === 0) { renderIdle(); return; }
@@ -363,7 +375,7 @@
     const scored = flat.map((e) => {
       const content = e.kind === "snippet" ? e.code : e.cmd;
       const haystack = `${e.desc} ${e.tags} ${e.topic} ${content}`.toLowerCase();
-      const score = words.reduce((n, w) => n + (haystack.includes(w) ? 1 : 0), 0);
+      const score = words.reduce((n, w) => n + wordScore(haystack, w), 0);
       return { e, score };
     }).filter((r) => r.score > 0);
 
