@@ -1,7 +1,7 @@
 <h1 align="center">toolbox</h1>
 
 <p align="center">
-  <!-- <a href="https://github.com/JOTELLECHEA/toolbox/releases"><img src="https://img.shields.io/github/v/release/JOTELLECHEA/toolbox" alt="Release"></a> -->
+  <a href="https://github.com/JOTELLECHEA/toolbox/releases"><img src="https://img.shields.io/github/v/release/JOTELLECHEA/toolbox" alt="Release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/JOTELLECHEA/toolbox" alt="License"></a>
   <img src="https://img.shields.io/badge/python-3-blue" alt="Python 3">
 </p>
@@ -35,10 +35,10 @@ Python 3 is the only requirement — no pip installs, no build step, nothing
 to configure. `server.py` locates the repo from its own path, so it works
 from anywhere:
 
-    alias toolbox="python3 /path/to/toolbox/app/server.py"
+    alias tb="python3 /path/to/toolbox/app/server.py"
 
 Swap `/path/to/toolbox` for wherever you cloned it (same goes for the Docker
-examples below). Then `toolbox` from any directory starts it.
+examples below). Then `tb` from any directory starts it.
 
 Search matches against each entry's description, tags, topic name, and its
 content — a command's text or a snippet's actual code. It scores by how many
@@ -50,18 +50,18 @@ containing "p**roc**ess."
 
 ## Structure
 
-Folders are grouped by how broad the topic is, not forced into one rigid
-pattern:
+All cheatsheets live under `drawer/`, in subfolders grouped by how broad the
+topic is rather than forced into one rigid pattern:
 
-- A single, standalone tool gets its own folder: `docker/docker.md`,
-  `git/git.md`.
+- A single, standalone tool gets its own folder: `drawer/docker/docker.md`,
+  `drawer/git/git.md`.
 - A broad topic with several related files shares one folder instead of
-  each file getting its own redundant single-file folder: `python/` holds
-  everything Python-related — env tooling, PyTorch, scikit-learn, Keras,
-  matplotlib, CUDA/ML notes — as flat files, since almost all of it is
-  Python anyway. No separate "ML" category needed.
-- Two closely related tools can share a folder too: `archives/` holds both
-  `tar.md` and `zip.md`.
+  each file getting its own redundant single-file folder: `drawer/python/`
+  holds everything Python-related — env tooling, PyTorch, scikit-learn,
+  Keras, matplotlib, CUDA/ML notes — as flat files, since almost all of it
+  is Python anyway. No separate "ML" category needed.
+- Two closely related tools can share a folder too: `drawer/archives/` holds
+  both `tar.md` and `zip.md`.
 
 New topic = new file, in an existing shared folder if it fits one, or its
 own folder if it's a standalone tool. Nothing else to register — the app
@@ -116,7 +116,7 @@ with a backtick will show up here too; those are expected, not problems.
 
 An alternative to running it directly — useful on a machine that doesn't
 already have Python set up the way you like it. For day-to-day use the
-plain `toolbox` alias starts faster, since there's no container to spin up.
+plain `tb` alias starts faster, since there's no container to spin up.
 
 `app/Dockerfile` bakes in the static app itself — `server.py`, `index.html`,
 the syntax highlighter, the fonts. Those rarely change, so rebuilding on the
@@ -139,5 +139,5 @@ Same address either way: `http://localhost:8420`.
 
 To run those from anywhere without `cd`-ing in first:
 
-    alias toolbox="docker compose -f /path/to/toolbox/toolbox/docker-compose.yml up -d"
+    alias toolbox="docker compose -f /path/to/toolbox/docker-compose.yml up -d"
     alias toolbox-down="docker compose -f /path/to/toolbox/docker-compose.yml down"
