@@ -1,4 +1,11 @@
-# toolbox
+<h1 align="center">toolbox</h1>
+
+<p align="center">
+  <!-- <a href="https://github.com/JOTELLECHEA/toolbox/releases"><img src="https://img.shields.io/github/v/release/JOTELLECHEA/toolbox" alt="Release"></a> -->
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/JOTELLECHEA/toolbox" alt="License"></a>
+  <img src="https://img.shields.io/badge/python-3-blue" alt="Python 3">
+</p>
+
 
 A personal reference of terminal commands and code snippets — the ones used
 often enough to need, but not often enough to remember. Searchable through a
@@ -8,6 +15,13 @@ This is my own setup, not a generic template — the `.md` files are my
 commands. The tool itself doesn't assume anything about what's in them
 though, so if you want something like this, fork it and swap in your own
 content.
+
+<table>
+  <tr>
+    <td><img src="docs/setup_python_env.png" alt="Searching &ldquo;setup python env&rdquo;"></td>
+    <td><img src="docs/line_plot.png" alt="Searching &ldquo;line plot&rdquo;, showing a syntax-highlighted snippet"></td>
+  </tr>
+</table>
 
 ## Getting started
 
