@@ -1,0 +1,7 @@
+services:
+  toolbox:
+    build: ./app
+    ports:
+      - "8420:8420"
+    volumes:
+      - .:/toolbox:ro
