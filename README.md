@@ -1,4 +1,6 @@
-<h1 align="center">toolbox</h1>
+<p align="center">
+  <img src="toolbox.png" alt="TOOLBOX">
+</p>
 
 <p align="center">
   <a href="https://github.com/JOTELLECHEA/toolbox/releases"><img src="https://img.shields.io/github/v/release/JOTELLECHEA/toolbox" alt="Release"></a>
