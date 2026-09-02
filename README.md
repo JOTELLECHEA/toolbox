@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="toolbox.png" alt="TOOLBOX">
+  <img src="toolbox.png" alt="TOOLBOX" width="300">
 </p>
 
 <p align="center">
