@@ -24,7 +24,7 @@
 | Tanh | `1 − tanh²(x)`, max 1.0 | moderate — better than sigmoid |
 | GELU | smooth, no closed form used in practice | low |
 
-### plot activation functions <!-- tag:matplotlib, image:activations.svg, activation, relu, sigmoid, compare -->
+### plot activation functions <!-- tag:matplotlib, tag:ml,image:activations.svg, activation, relu, sigmoid, compare -->
 ```python
 import numpy as np
 import matplotlib.pyplot as plt
