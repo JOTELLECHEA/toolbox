@@ -24,6 +24,10 @@ Two entry formats live side by side:
     boilerplate code here
     ```
 
+Tags support two prefixes: `tag:name` shows that word as a pill in the UI
+(others stay search-only), and `image:file.svg` attaches a preview image,
+resolved relative to the .md file's own directory.
+
 Fully offline — the syntax highlighter and all fonts are self-hosted
 alongside this file (highlight.min.js, latex.min.js, fonts/), no CDN calls.
 """
@@ -33,6 +37,7 @@ import json
 import os
 import re
 import socketserver
+import urllib.parse
 from pathlib import Path
 
 STATIC_DIR = Path(__file__).resolve().parent
@@ -46,6 +51,16 @@ PORT = int(os.environ.get("TOOLBOX_PORT", 8420))
 # TOOLBOX_HOST in the Dockerfile, not by changing this default.
 HOST = os.environ.get("TOOLBOX_HOST", "127.0.0.1")
 
+# Preview images are served from anywhere under ROOT, so the /img/ route is
+# the one place a URL can name an arbitrary file path. Everything it serves
+# must be inside ROOT and must have one of these extensions — checked after
+# resolving symlinks and `..`, not before.
+IMAGE_TYPES = {
+    ".svg": "image/svg+xml",
+    ".png": "image/png",
+    ".webp": "image/webp",
+}
+
 ENTRY_RE = re.compile(
     r"^- `(?P<cmd>[^`]+)`"
     r"(?:\s*[—-]\s*(?P<desc>.*?))?"
@@ -57,6 +72,16 @@ SNIPPET_TITLE_RE = re.compile(
 )
 FENCE_RE = re.compile(r"^```(?P<lang>\w*)\s*$")
 HEADER_RE = re.compile(r"^(#{2,6})\s+(.*)$")
+# A markdown table: a row of pipe-delimited cells, then a separator row of
+# dashes. The separator is what distinguishes a real table from a line that
+# merely happens to contain pipes.
+TABLE_ROW_RE = re.compile(r"^\|.*\|$")
+TABLE_SEP_RE = re.compile(r"^\|[\s:|-]*-[\s:|-]*\|$")
+
+
+def table_cells(line):
+    """Split a markdown table row into cell strings."""
+    return [c.strip() for c in line.strip().strip("|").split("|")]
 
 
 def sheets():
@@ -69,6 +94,51 @@ def sheets():
         p for p in ROOT.rglob("*.md")
         if not p.resolve().is_relative_to(STATIC_DIR)
     )
+
+
+def split_tags(raw):
+    """Separate display tags, search-only tags, and an optional image.
+
+    `tag:name` is shown as a pill in the UI and stays searchable.
+    `image:file.svg` names a preview image and is dropped from the search
+    text entirely — a filename isn't something you'd ever type as a query.
+    Everything else is search-only. Returns (searchable, display, image).
+    """
+    parts = [t.strip() for t in (raw or "").split(",") if t.strip()]
+    display, searchable, image = [], [], None
+    for p in parts:
+        low = p.lower()
+        if low.startswith("tag:"):
+            word = p[4:].strip()
+            if word:
+                display.append(word)
+                searchable.append(word)
+        elif low.startswith("image:"):
+            name = p[6:].strip()
+            if name:
+                image = name
+        else:
+            searchable.append(p)
+    return ", ".join(searchable), display, image
+
+
+def image_url(md_path, name):
+    """Build the /img/ URL for an image named relative to its .md file.
+
+    Returns None if the result would land outside ROOT — the same guard the
+    /img/ route applies, so a bad path never even reaches the client.
+    """
+    if not name:
+        return None
+    try:
+        target = (md_path.parent / name).resolve()
+        target.relative_to(ROOT.resolve())
+    except (ValueError, OSError):
+        return None
+    if target.suffix.lower() not in IMAGE_TYPES:
+        return None
+    rel = target.relative_to(ROOT.resolve()).as_posix()
+    return "/img/" + urllib.parse.quote(rel)
 
 
 def parse_file(path):
@@ -104,10 +174,13 @@ def parse_file(path):
                 while k < n and lines[k].strip() != "```":
                     code_lines.append(lines[k])
                     k += 1
+                searchable, display, img = split_tags(sm.group("tags"))
                 yield {
                     "kind": "snippet",
                     "desc": sm.group("title").strip(),
-                    "tags": sm.group("tags") or "",
+                    "tags": searchable,
+                    "pills": display,
+                    "image": image_url(path, img),
                     "lang": fm.group("lang"),
                     "code": "\n".join(code_lines),
                     "section": section,
@@ -115,13 +188,45 @@ def parse_file(path):
                 i = k + 1  # resume after the closing fence
                 continue
 
+            # Table: an H3 title, then a pipe row followed by a `|---|`
+            # separator. Same lookahead shape as the fence case above.
+            if (
+                j + 1 < n
+                and TABLE_ROW_RE.match(lines[j].strip())
+                and TABLE_SEP_RE.match(lines[j + 1].strip())
+            ):
+                header = table_cells(lines[j])
+                rows, k = [], j + 2
+                while k < n and TABLE_ROW_RE.match(lines[k].strip()):
+                    rows.append(table_cells(lines[k]))
+                    k += 1
+                searchable, display, img = split_tags(sm.group("tags"))
+                yield {
+                    "kind": "table",
+                    "desc": sm.group("title").strip(),
+                    "tags": searchable,
+                    "pills": display,
+                    "image": image_url(path, img),
+                    "header": header,
+                    "rows": rows,
+                    # Kept so the copy button can hand back the original
+                    # markdown rather than a reconstruction.
+                    "source": "\n".join(lines[j:k]),
+                    "section": section,
+                }
+                i = k
+                continue
+
         m = ENTRY_RE.match(stripped)
         if m:
+            searchable, display, img = split_tags(m.group("tags"))
             yield {
                 "kind": "cmd",
                 "cmd": m.group("cmd"),
                 "desc": (m.group("desc") or "").strip(),
-                "tags": m.group("tags") or "",
+                "tags": searchable,
+                "pills": display,
+                "image": image_url(path, img),
                 "section": section,
             }
             i += 1
@@ -163,9 +268,58 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(payload)
             return
+        if self.path.startswith("/img/"):
+            self.serve_image(self.path[len("/img/"):])
+            return
         if self.path == "/":
             self.path = "/index.html"
         return super().do_GET()
+
+    def serve_image(self, raw_rel):
+        """Serve a preview image from anywhere under ROOT.
+
+        This is the only route that turns a URL into an arbitrary file path,
+        so it validates rather than trusts: the path is resolved first (which
+        collapses `..` and follows symlinks), then checked to still be inside
+        ROOT, then checked against the extension allowlist. A path that
+        escapes ROOT fails the relative_to() check and 404s.
+
+        It matters here because the Docker setup binds 0.0.0.0, so on a shared
+        network this route isn't only reachable by the person at the keyboard.
+        """
+        rel = urllib.parse.unquote(raw_rel.split("?", 1)[0].split("#", 1)[0])
+        try:
+            target = (ROOT / rel).resolve()
+            target.relative_to(ROOT.resolve())
+        except (ValueError, OSError):
+            self.send_error(404, "Not found")
+            return
+
+        ctype = IMAGE_TYPES.get(target.suffix.lower())
+        if ctype is None or not target.is_file():
+            self.send_error(404, "Not found")
+            return
+
+        try:
+            data = target.read_bytes()
+        except OSError:
+            self.send_error(404, "Not found")
+            return
+
+        self.send_response(200)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(data)))
+        # An SVG rendered inside <img> can't run scripts, but these make that
+        # true even if the URL is opened directly as a top-level page. The
+        # style-src exception is needed because matplotlib emits inline
+        # <style> blocks in its SVG output.
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header(
+            "Content-Security-Policy",
+            "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+        )
+        self.end_headers()
+        self.wfile.write(data)
 
     def log_message(self, format, *args):
         pass  # keep the terminal quiet

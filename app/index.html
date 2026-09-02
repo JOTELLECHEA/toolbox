@@ -55,6 +55,8 @@
     --confirm: #5fa05a;
     --accent-amber: #c9a227;
     --accent-sage: #94a870;
+    --accent-blue: #6aa9e0;
+    --accent-blue-soft: rgba(106, 169, 224, 0.16);
     --font-display: "Big Shoulders Stencil", "Arial Narrow", sans-serif;
     --font-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
     --font-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, monospace;
@@ -200,6 +202,22 @@
     margin-left: 8px;
   }
 
+  /* Tag pills sit alongside the topic pill — filled steel blue rather than
+     the topic's red, so the two read as different kinds of label at a
+     glance. Blue is deliberately not one of the syntax-highlighting hues
+     (amber/sage), which would otherwise imply "this is code." */
+  .entry-tag {
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent-blue);
+    background: var(--accent-blue-soft);
+    padding: 2px 7px;
+    border-radius: 2px;
+    margin-left: 6px;
+  }
+
   .entry-cmd {
     font-family: var(--font-mono);
     font-size: 15px;
@@ -230,6 +248,82 @@
   }
 
   .entry.snippet .copy-btn { justify-self: end; }
+
+  /* ---------- table card ---------- */
+
+  .entry.table-entry { grid-template-columns: 1fr; }
+
+  .table-wrap { overflow-x: auto; }
+
+  .entry-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    background: var(--strip);
+    border-radius: 2px;
+  }
+
+  .entry-table th,
+  .entry-table td {
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .entry-table thead th {
+    font-family: var(--font-display);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  .entry-table tbody tr:last-child td { border-bottom: none; }
+
+  .entry-table td code {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--accent-blue);
+  }
+
+  .entry-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    align-items: center;
+  }
+
+  .preview-btn {
+    font-family: var(--font-display);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-blue);
+    background: var(--accent-blue-soft);
+    border: 1px solid transparent;
+    border-radius: 3px;
+    padding: 10px 14px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .preview-btn:hover { border-color: var(--accent-blue); }
+
+  .preview-pane {
+    margin-top: 12px;
+    background: #ffffff;   /* plots are drawn for light backgrounds */
+    border-radius: 3px;
+    padding: 10px;
+    text-align: center;
+  }
+
+  .preview-img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+  }
 
   /* ---------- syntax highlighting (custom, matches the palette above —
      no stock hljs theme, since those clash with the red/graphite scheme) --- */
@@ -324,15 +418,55 @@
     }[c]));
   }
 
+  // Minimal inline markdown for table cells — **bold** and `code` only.
+  // Escaping runs FIRST, so the tags below are the only HTML that can
+  // reach the DOM; cell content can never inject markup.
+  function inlineMd(s) {
+    return escapeHtml(s || "")
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/`([^`]+?)`/g, "<code>$1</code>");
+  }
+
   function entryCard(e, showTopicPill) {
-    const pill = showTopicPill ? `<span class="entry-pill">${escapeHtml(e.topic)}</span>` : "";
+    const topicPill = showTopicPill ? `<span class="entry-pill">${escapeHtml(e.topic)}</span>` : "";
+    const tagPills = (e.pills || [])
+      .map((t) => `<span class="entry-tag">${escapeHtml(t)}</span>`)
+      .join("");
+    const pill = topicPill + tagPills;
+    if (e.kind === "table") {
+      const cell = (text) => inlineMd(text);
+      const head = (e.header || []).map((h) => `<th>${cell(h)}</th>`).join("");
+      const body = (e.rows || [])
+        .map((r) => `<tr>${r.map((c) => `<td>${cell(c)}</td>`).join("")}</tr>`)
+        .join("");
+      return `
+        <div class="entry table-entry">
+          <div class="entry-desc">${escapeHtml(e.desc)}${pill}</div>
+          <div class="table-wrap">
+            <table class="entry-table">
+              <thead><tr>${head}</tr></thead>
+              <tbody>${body}</tbody>
+            </table>
+          </div>
+          <div class="entry-actions">
+            <button class="copy-btn" data-cmd="${escapeHtml(e.source || "")}">Copy table</button>
+          </div>
+        </div>`;
+    }
     if (e.kind === "snippet") {
       const langClass = e.lang ? ` class="language-${escapeHtml(e.lang)}"` : "";
+      const previewBtn = e.image
+        ? `<button class="preview-btn" data-src="${escapeHtml(e.image)}">Preview</button>`
+        : "";
+      // The pane sits after the actions row, not inside it — otherwise the
+      // image renders as a flex item wedged between the buttons.
+      const previewPane = e.image ? `<div class="preview-pane" hidden></div>` : "";
       return `
         <div class="entry snippet">
           <div class="entry-desc">${escapeHtml(e.desc)}${pill}</div>
           <pre class="snippet-code"><code${langClass}>${escapeHtml(e.code)}</code></pre>
-          <button class="copy-btn">Copy snippet</button>
+          <div class="entry-actions">${previewBtn}<button class="copy-btn">Copy snippet</button></div>
+          ${previewPane}
         </div>`;
     }
     return `
@@ -373,7 +507,14 @@
     if (words.length === 0) { renderIdle(); return; }
 
     const scored = flat.map((e) => {
-      const content = e.kind === "snippet" ? e.code : e.cmd;
+      // What counts as an entry's "content" depends on its kind — a table's
+      // searchable text is every cell, which is the whole point of tables
+      // being a real entry type rather than a fenced block.
+      let content;
+      if (e.kind === "snippet") content = e.code;
+      else if (e.kind === "table") {
+        content = [(e.header || []).join(" "), ...(e.rows || []).map((r) => r.join(" "))].join(" ");
+      } else content = e.cmd;
       const haystack = `${e.desc} ${e.tags} ${e.topic} ${content}`.toLowerCase();
       const score = words.reduce((n, w) => n + wordScore(haystack, w), 0);
       return { e, score };
@@ -398,6 +539,25 @@
   }
 
   resultsEl.addEventListener("click", async (ev) => {
+    const previewBtn = ev.target.closest(".preview-btn");
+    if (previewBtn) {
+      const pane = previewBtn.closest(".entry").querySelector(".preview-pane");
+      if (!pane) return;
+      // Lazy-load: the <img> isn't created until first open, so a search
+      // returning many snippets doesn't fetch every preview up front.
+      if (!pane.firstChild) {
+        const img = document.createElement("img");
+        img.src = previewBtn.dataset.src;
+        img.alt = "Preview";
+        img.className = "preview-img";
+        img.onerror = () => { pane.textContent = "Preview image not found."; };
+        pane.appendChild(img);
+      }
+      pane.hidden = !pane.hidden;
+      previewBtn.textContent = pane.hidden ? "Preview" : "Hide preview";
+      return;
+    }
+
     const btn = ev.target.closest(".copy-btn");
     if (!btn) return;
     const isSnippet = btn.dataset.cmd === undefined;
