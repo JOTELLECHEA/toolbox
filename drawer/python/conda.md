@@ -1,0 +1,30 @@
+## conda
+- `conda info` - Verify conda is installed, check version number
+- `conda update --name base conda` - Update conda in base environment
+- `conda install anaconda` - Install latest anaconda distribution
+- `conda install PACKAGENAME ` - Install a package included in Anaconda
+- `conda update PACKAGENAME` - Update any installed program
+- `COMMANDNAME --help` - Command line help
+- `conda install --help` - Command line help
+- `conda create --name ENVNAME` — Create a new environment
+- `conda env list` — list all environments
+- `conda update --all` - Update all packages
+- `conda install --channel CHANNELNAME PKGNAME` - Install a package from specific channel
+- `conda install "PKGNAME>2.5,<3.2"` - Install package with AND logic 
+- `conda install "PKGNAME [version='2.5|3.2']"` - Install package with OR logic 
+- `conda uninstall PKGNAME` - Uninstall package
+- `conda config --show-sources` - View channel sources
+- `conda config --add channels CHANNELNAME` - Add channel
+- `conda config --set channel_priority strict` - Set default channel for pkg fetching
+- `conda activate ENVNAME` — activate an environment
+- `conda deactivate` — leave the active environment
+- `conda create --name ENVNAME python=3.12` - create environment with Python version
+- `conda create --clone ENVNAME --name NEWENV` - clone environment
+- `conda rename --name ENVNAME NEWENVNAME` - rename environment 
+- `conda remove --name ENVNAME --all` - delete environment by name
+- `conda list --name ENVNAME --revisions` - list revisions made to environment 
+- `conda install --name ENVNAME --revision NUMBER` - restore environment to a revision
+- `conda export ENVNAME>ENV.yml` - export platform + package specific
+- `conda env create --name ENVNAME --file ENV.yml` — from a .yml file
+- `conda create --name ENVNAME --file ENV.txt` — from a .txt file
+
